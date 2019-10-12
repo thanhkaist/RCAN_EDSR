@@ -4,6 +4,7 @@ from torch.autograd import Variable
 import argparse
 import numpy as np
 from torch.nn import init
+import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import math
 from math import log10
@@ -48,7 +49,7 @@ parser.add_argument('--lossType', default='L1', help='Loss type')
 parser.add_argument('--period', type=int, default=10, help='period of evaluation')
 parser.add_argument('--scale', type=int, default=2, help='scale output size /input size')
 parser.add_argument('--gpu', type=int, default=0, help='gpu index')
-
+parser.add_argument('--multi', type=int, default=0, help='multi gpu')
 args = parser.parse_args()
 
 if args.gpu == 0:
@@ -104,16 +105,25 @@ def test(model, dataloader):
 def train(args):
     # define model
     # my_model = model.EDSR()
-    my_model = model.RCAN()
+    my_model = model.RCAN(res_blocks=4,rcab_blocks=8)
     my_model.apply(weights_init)
-    my_model.cuda()
+    no_params = no_of_parameters(my_model)
 
     save = SaveData(args)
-
-    no_params = no_of_parameters(my_model)
-    save.save_log(str(no_params))
-
+    log = "Number of parameter {}".format(no_params)
+    print(log)
+    save.save_log(log)
+    save.write_csv_header('mode','epoch','lr','batch_loss','time(min)','val_psnr','val_ssim')
     last_epoch = 0
+
+    if args.multi == True:
+        multi  = 1
+        print("Using", torch.cuda.device_count(), "GPUs!")
+        my_model = nn.DataParallel(my_model)
+
+    my_model.cuda()
+    cudnn.benchmark = True
+
 
     # resume model
     if args.finetuning:
@@ -139,6 +149,9 @@ def train(args):
     avg_time = AverageMeter()
     avg_time.reset()
 
+    print("Begin train from epoch: {}".format(start_epoch))
+    print("Batch len: {}".format(len(dataloader.dataset)))
+
     for epoch in range(start_epoch, args.epochs):
         start = time.time()
         # learning_rate = lr_cheduler.adjust_lr(epoch, optimizer)
@@ -154,7 +167,7 @@ def train(args):
             total_loss = loss
             total_loss.backward()
             optimizer.step()
-            avg_loss.update(loss.data.cpu().numpy(), batch)
+            avg_loss.update(loss.data.item(), args.batchSize)
         end = time.time()
         epoch_time = (end - start)
         avg_time.update(epoch_time)
@@ -162,6 +175,7 @@ def train(args):
             epoch + 1, args.epochs, learning_rate, avg_loss.sum(), avg_loss.avg(), avg_time.sum() / 60, avg_time.avg())
         print(log)
         save.save_log(log)
+        save.log_csv('train',epoch+1,learning_rate,avg_loss.sum(),avg_time.sum()/60)
         if (epoch + 1) % args.period == 0:
             my_model.eval()
             avg_psnr, avg_ssim = test(my_model, testdataloader)
@@ -170,6 +184,7 @@ def train(args):
                                                                                 avg_ssim)
             print(log)
             save.save_log(log)
+            save.log_csv('test', epoch + 1, learning_rate, avg_loss.sum(), avg_time.sum() / 60)
             save.save_model(my_model, epoch,avg_psnr)
 
 

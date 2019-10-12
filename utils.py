@@ -20,11 +20,15 @@ class SaveData():
             os.makedirs(self.save_dir_model)
         if os.path.exists(self.save_dir + '/log.txt'):
             self.logFile = open(self.save_dir + '/log.txt', 'a')
+            self.logCsv = open(self.save_dir + '/log.csv', 'a')
         else:
             self.logFile = open(self.save_dir + '/log.txt', 'w')
+            self.logCsv = open(self.save_dir + '/log.csv', 'w')
         self.best_score = 0
 
     def save_model(self, model, epoch, score):
+        if self.args.multi:
+            model = model.module
         torch.save(model.state_dict(), self.save_dir_model + '/model_lastest.pt')
         torch.save(model.state_dict(), self.save_dir_model + '/model_' + str(epoch) + '.pt')
         torch.save(model, self.save_dir_model + '/model_obj.pt')
@@ -51,6 +55,16 @@ class SaveData():
         print("load mode_status frmo {}/model_best.pt, epoch: {}".format(self.save_dir_model, best_epoch))
         return model, best_epoch
 
+    def write_csv_header(self,*args):
+        self.log_csv(*args)
+
+    def log_csv(self,*args):
+        log = ""
+        sys.stdout.flush()
+        for i in args:
+            log += str(i)+','
+        self.logCsv.write(log[:-1]+'\n')
+        self.logCsv.flush()
 
 class AverageMeter():
     __var = []
