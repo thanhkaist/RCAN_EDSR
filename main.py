@@ -102,8 +102,9 @@ def test(model, dataloader):
 
 
 def train(args):
-    # Set a Model
-    my_model = model.EDSR()
+    # define model
+    # my_model = model.EDSR()
+    my_model = model.RCAN()
     my_model.apply(weights_init)
     my_model.cuda()
 

@@ -34,6 +34,7 @@ Target:
 - incorperated channel attention . 
 
 
+EDSR:
 Weremovethebatchnormalization layers from our network as Nah et al.[19] presented in their image deblurring work. Since batch normalization layers normalizethefeatures, theygetridofrangeﬂexibility from networks by normalizing the features, it is better to remove them
  GPU memory usage is also sufﬁciently reduced since the batch normalization layers consume the same amount of memory as the preceding convolutional layers
 
@@ -44,8 +45,11 @@ It takes 8 days and 4 days to train EDSR and MDSR, respectively
 Note that geometric self-ensemble is valid only for symmetric downsampling methods such as bicubic downsampling.
 
 Using L1 loss.
-
 300000 updates
-
 residual block 16
 EDSR scale 1 for filter size 64  
+
+RCAN:
+
+20 RCAB
+10 Resblock

@@ -1,4 +1,3 @@
-import cv2
 import torch
 import torch.nn as nn
 from torch.nn import init
@@ -20,49 +19,41 @@ def no_of_parameters(model):
 
 # Super Resolution
 class RCAN(nn.Module):
-    def __init__(self, args):
-        super(Net1, self).__init__()
-        nChannel = args.nChannel
-        nFeat = args.nFeat
-        scale = args.scale
-        self.args = args
-        nRG = args.nRG
+    def __init__(self,scale = 2,res_blocks = 10, rcab_blocks= 20, channels=64 ):
+        super(RCAN, self).__init__()
+        self.RBs = res_blocks
+        self.RCABs = rcab_blocks
+        self.scale = scale
+        self.channels =channels
         # Define Network
         # ===========================================
-        upsample_block_num = int(math.log(scale, 2))
+        upsample_block_num = int(math.log(self.scale, 2))
         self.block1 = nn.Sequential(
-            nn.Conv2d(nChannel, nFeat, kernel_size=7, padding=3),
+            nn.Conv2d(3, self.channels, kernel_size=3, padding=1),
             nn.ReLU()
         )
-        block2= [RG(nFeat) for _ in range(nRG)]
-        block2.append(nn.Conv2d(nFeat,nFeat,3,1,1))
+        block2= [RG(self.channels,self.RCABs) for _ in range(self.RBs)]
+        block2.append(nn.Conv2d(self.channels,self.channels,3,1,1))
         self.block2 = nn.Sequential(*block2)
         block3 = [UpsampleBlock(64, 2) for _ in range(upsample_block_num)]
-        block3.append(nn.Conv2d(64, 3, kernel_size=7, padding=3))
+        block3.append(nn.Conv2d(64, 3, kernel_size=3, padding=1))
         self.block3 = nn.Sequential(*block3)
 
-        # ===========================================
-
     def forward(self, x):
-        # Make a Network path
-        # ===========================================
         block1 = self.block1(x)
         block2 = self.block2(block1)
         block3 = self.block3(block2+block1)
-
-        # ===========================================
-
         return block3
 
 class RG(nn.Module):
-    def __init__(self,in_channels = 64):
+    def __init__(self,in_channels = 64,RCAB_blocks = 20):
         super(RG,self).__init__()
-        self.rc1 = RCAB(in_channels)
-        self.rc2 = RCAB(in_channels)
+        RCABs = [RCAB(in_channels) for _ in range(RCAB_blocks)]
+        RCABs.append(nn.Conv2d(in_channels,in_channels,3,padding=1))
+        self.RCABs = nn.Sequential(*RCABs)
 
     def forward(self, x):
-        out = self.rc1(x)
-        out = self.rc2(out)
+        out = self.RCABs(x)
         return out + x
 
 class RCAB(nn.Module):
@@ -127,7 +118,6 @@ class EDSR(nn.Module):
         # Network Blocks
         # ===========================================
         upsample_block_num = int(math.log(self.upscale, 2))
-
         self.block1 = nn.Conv2d(3, self.filter_channel, kernel_size=3, padding=1)
 
         block2 = [ResidualBlock(self.filter_channel,self.res_scale) for _ in range(self.res_blocks)]
@@ -143,7 +133,6 @@ class EDSR(nn.Module):
         block1 = self.block1(x)
         block2 = self.block2(block1)
         block3 = self.block3(block1+block2)
-        # ===========================================
         return block3
 
 
