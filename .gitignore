@@ -1,0 +1,6 @@
+.idea
+*.zip
+data
+__pycache__
+result*
+mycode
