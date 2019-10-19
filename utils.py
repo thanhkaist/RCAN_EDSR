@@ -106,20 +106,12 @@ class AverageMeter():
 
 
 def unnormalize(img):
-    out = img.cpu()
-    out = out.data.squeeze(0)
-
-    mean = [0.5, 0.5, 0.5]
-    std = [0.5, 0.5, 0.5]
-    for t, m, s in zip(out, mean, std):
-        t.mul_(s).add_(m)
-
-    out = out.numpy()
-    out *= 255.0
-    out = out.clip(0, 255)
-
-    out = out[:, 4:-4, 4:-4].transpose(1, 2, 0)[..., ::-1]
-    return out
+    out = img.data.cpu().numpy()
+    nor = out*0.5 +0.5
+    nor = nor*255.0
+    nor = nor.clip(0, 255)
+    nor = nor.transpose(1, 2, 0)[..., ::-1]
+    return nor
 
 
 def psnr_ssim_from_sci(img1, img2, padding=4):
@@ -144,5 +136,5 @@ def psnr_ssim_from_sci(img1, img2, padding=4):
     img1 = img1[padding: -padding, padding:-padding]
     img2 = img2[padding: -padding, padding:-padding]
     ss = ssim(img1, img2)
-    ps = psnr(img1, img2)
+    ps = psnr(img1, img2,255.0)
     return (ps, ss)

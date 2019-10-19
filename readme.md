@@ -53,3 +53,6 @@ RCAN:
 
 20 RCAB
 10 Resblock
+
+
+import matplotlib.pyplot as plt; plt.imshow(im_lr); plt.show()

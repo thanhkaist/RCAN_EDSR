@@ -41,7 +41,7 @@ parser.add_argument('--patchSize', type=int, default=64, help='patch size')
 parser.add_argument('--nThreads', type=int, default=8, help='number of threads for data loading')
 parser.add_argument('--batchSize', type=int, default=16, help='input batch size for training')
 parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
-parser.add_argument('--epochs', type=int, default=200, help='number of epochs to train')
+parser.add_argument('--epochs', type=int, default=800, help='number of epochs to train')
 parser.add_argument('--lrDecay', type=int, default=100, help='epoch of half lr')
 parser.add_argument('--decayType', default='inv', help='lr decay function')
 parser.add_argument('--lossType', default='L1', help='Loss type')
@@ -87,14 +87,14 @@ class LrScheduler():
 def test(model, dataloader):
     avg_psnr = 0
     avg_ssim = 0
-    for batch, (im_lr, im_hr) in enumerate(dataloader):
+    for batch, ((im_lr, im_hr),hr_name)in enumerate(dataloader):
         with torch.no_grad():
             im_lr = Variable(im_lr.cuda(), volatile=False)
             im_hr = Variable(im_hr.cuda())
             output = model(im_lr)
 
-        output = unnormalize(output)
-        im_hr = unnormalize(im_hr)
+        output = unnormalize(output[0])
+        im_hr = unnormalize(im_hr[0])
         psnr, ssim = psnr_ssim_from_sci(output, im_hr)
         avg_psnr += psnr
         avg_ssim += ssim
@@ -184,7 +184,7 @@ def train(args):
                                                                                 avg_ssim)
             print(log)
             save.save_log(log)
-            save.log_csv('test', epoch + 1, learning_rate, avg_loss.sum(), avg_time.sum() / 60)
+            save.log_csv('test', epoch + 1, learning_rate, avg_loss.sum(), avg_time.sum() / 60,avg_psnr,avg_ssim)
             save.save_model(my_model, epoch,avg_psnr)
 
 

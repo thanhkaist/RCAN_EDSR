@@ -170,7 +170,7 @@ class Set5(data.Dataset):
         imgIn = cv2.imread(nameIn)
         imgTar = cv2.imread(nameTar)
 
-        return np_to_tensor(imgIn, imgTar, self.channel)
+        return np_to_tensor(imgIn, imgTar, self.channel) , self.fileList[idx]
 
     def __len__(self):
         return self.nTrain
