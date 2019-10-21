@@ -7,7 +7,6 @@ import torch
 import torch.utils.data as data
 from PIL import Image
 
-
 def get_train_dataloader(name, args):
     if name == 'DIV2K':
         dataset = DIV2K(args)
@@ -24,11 +23,11 @@ def get_test_dataloader(name, args):
     if name == 'Set5':
         dataset = Set5(args)
     elif name == 'Set14':
-        dataset = Set14(args)
+        dataset = Set5(args)
     elif name == 'B100':
-        dataset = B100(args)
+        dataset = Set5(args)
     elif name == 'Urban100':
-        dataset = Urban100(args)
+        dataset = Set5(args)
     else:
         raise Exception('Dataset is not supported')
 
@@ -37,38 +36,6 @@ def get_test_dataloader(name, args):
                                              pin_memory=False)
     return dataloader
 
-
-class Set14(data.Dataset):
-    def __init__(self, args):
-        pass
-
-    def __getitem__(self, item):
-        pass
-
-    def __len__(self):
-        pass
-
-
-class B100(data.Dataset):
-    def __init__(self, args):
-        pass
-
-    def __getitem__(self, item):
-        pass
-
-    def __len__(self):
-        pass
-
-
-class Urban100(data.Dataset):
-    def __init__(self, args):
-        pass
-
-    def __getitem__(self, item):
-        pass
-
-    def __len__(self):
-        pass
 
 
 def np_to_tensor(imgIn, imgTar, channel):
