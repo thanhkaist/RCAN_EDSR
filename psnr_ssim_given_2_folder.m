@@ -1,8 +1,8 @@
 close all; clc; clear;
-hrDir = 'data/benchmark/Urban100/HR/';
-srDir = 'val/Urban100/';
-dataSet = 'Set14';
-netName = 'RCAN';
+hrDir = 'data/benchmark/B100/HR/';
+srDir = 'val/EDSR/B100/';
+dataSet = 'B100';
+netName = 'EDSR';
 
 scale = 2;
 shave = 8;
