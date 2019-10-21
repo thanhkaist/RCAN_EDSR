@@ -7,12 +7,16 @@ from skimage.measure import compare_ssim as ssim
 from skimage.measure import compare_psnr as psnr
 from PIL import Image
 import numpy as np
+import tensorboardX
 
 
 class SaveData():
     def __init__(self, args):
         self.args = args
         self.save_dir = os.path.join(args.saveDir, args.load)
+        self.tensorboard_dir = os.path.join(args.saveDir,'board_log',args.load)
+        if not os.path.exists(self.tensorboard_dir):
+            os.makedirs(self.tensorboard_dir)
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
         self.save_dir_model = os.path.join(self.save_dir, 'model')
@@ -24,7 +28,17 @@ class SaveData():
         else:
             self.logFile = open(self.save_dir + '/log.txt', 'w')
             self.logCsv = open(self.save_dir + '/log.csv', 'w')
+
+        # Save config parameter
+        if os.path.exists(self.save_dir + '/config.txt'):
+            self.configFile = open(self.save_dir + '/config.txt', 'a')
+        else:
+            self.configFile = open(self.save_dir + '/config.txt', 'w')
+
+        self.configFile.write(str(args))
+        self.configFile.flush()
         self.best_score = 0
+        self.tb_writter = tensorboardX.SummaryWriter(logdir=self.tensorboard_dir)
 
     def save_model(self, model, epoch, score):
         if self.args.multi:
@@ -65,6 +79,9 @@ class SaveData():
             log += str(i)+','
         self.logCsv.write(log[:-1]+'\n')
         self.logCsv.flush()
+
+    def write_tf_board(self,name,value,epoch):
+        self.tb_writter.add_scalar(name,value,epoch)
 
 class AverageMeter():
     __var = []
